@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblioteca Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --card-bg: #ffffff;
+  --accent: #6c63ff;
+  --accent2: #ff6584;
+  --text: #1a1a2e;
+  --muted: #aaaabc;
+  --border: rgba(108,99,255,0.18);
+  --card-w: 200px;
+  --gap: 20px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  background: var(--bg);
+  font-family: 'Montserrat', sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+body {
+  padding: 36px 0 80px;
+  position: relative;
+}
+
+/* Ambient blobs */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+}
+body::before { width: 500px; height: 500px; background: var(--accent); top: -180px; left: -180px; }
+body::after  { width: 400px; height: 400px; background: var(--accent2); bottom: -120px; right: -120px; }
+
+/* ── NAV SWITCH ── */
+.nav-switch {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+.switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 26px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, var(--accent), #8b7fff);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 18px rgba(108,99,255,0.28);
+}
+.switch-btn:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.35); }
+.switch-btn:active { transform: translateY(0); }
+
+
+header {
+  text-align: center;
+  margin-bottom: 48px;
+  position: relative;
+  z-index: 2;
+  padding: 0 16px;
+}
+header .tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+  background: rgba(108,99,255,0.06);
+}
+header h1 {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #1a1a2e 30%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: 64px;
+  position: relative;
+  z-index: 2;
+}
+.section-title {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 0 16px;
+}
+.section-title h2 {
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.section-title p {
+  color: #888;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── CAROUSEL ── */
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 52px;     /* room for arrows */
+}
+
+.carousel-track-container {
+  overflow: hidden;
+  width: 100%;
+  padding: 16px 0 40px;
+  cursor: grab;
+}
+.carousel-track-container.dragging { cursor: grabbing; }
+
+.carousel-track {
+  display: flex;
+  gap: var(--gap);
+  transition: transform 0.55s cubic-bezier(0.77,0,0.175,1);
+  will-change: transform;
+  user-select: none;
+}
+.carousel-track.no-transition { transition: none; }
+
+/* ── CARD ── */
+.book-card {
+  flex: 0 0 var(--card-w);
+  background: var(--card-bg);
+  border-radius: 18px;
+  border: 1px solid rgba(108,99,255,0.13);
+  box-shadow: 0 3px 16px rgba(0,0,0,0.07);
+  overflow: hidden;
+  opacity: 0.52;
+  transform: scale(0.92);
+  transition: opacity 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.book-card.active {
+  opacity: 1;
+  transform: scale(1);
+  border-color: var(--accent);
+  box-shadow: 0 16px 48px rgba(108,99,255,0.22);
+}
+.book-card:hover:not(.active) { opacity: 0.75; transform: scale(0.95); }
+
+.book-cover {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  display: block;
+  background: #eee;
+}
+.book-cover-placeholder {
+  width: 100%;
+  aspect-ratio: 3/4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+  color: white;
+}
+.cover-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.cover-author { font-size: 11px; opacity: 0.8; }
+
+.book-info { padding: 14px 14px 16px; }
+.book-title {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 6px;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.book-author {
+  color: var(--accent);
+  font-size: 11px;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.book-btn {
+  display: block;
+  text-align: center;
+  padding: 9px 6px;
+  border-radius: 9px;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--accent), #8b7fff);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.book-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.book-btn:active { transform: translateY(0); }
+
+/* ── NAV BUTTONS ── */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(calc(-50% - 20px)); /* offset for bottom padding */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(108,99,255,0.12);
+  color: var(--accent);
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.nav-btn:hover {
+  background: rgba(108,99,255,0.3);
+  transform: translateY(calc(-50% - 20px)) scale(1.1);
+}
+.nav-btn.prev { left: 4px; }
+.nav-btn.next { right: 4px; }
+
+/* ── DOTS ── */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  padding: 0 16px;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: none;
+  background: var(--muted);
+  cursor: pointer;
+  transition: background 0.3s, width 0.3s;
+  padding: 0;
+  flex-shrink: 0;
+}
+.dot.active { width: 22px; border-radius: 4px; background: var(--accent); }
+
+/* Cover gradients */
+.cover-0 { background: linear-gradient(135deg, #1a1a4e, #3a3aff 80%); }
+.cover-1 { background: linear-gradient(135deg, #1e1e1e, #555); }
+.cover-2 { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+.cover-3 { background: linear-gradient(135deg, #ff512f, #dd2476); }
+.cover-4 { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.cover-5 { background: linear-gradient(135deg, #fc466b, #3f5efb); }
+.cover-6 { background: linear-gradient(135deg, #8360c3, #2ebf91); }
+.cover-7 { background: linear-gradient(135deg, #f7971e, #ffd200); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  :root { --card-w: 155px; --gap: 14px; }
+  body { padding: 24px 0 60px; }
+  header { margin-bottom: 32px; }
+  .carousel-wrapper { padding: 0 40px; }
+  .nav-btn { width: 34px; height: 34px; font-size: 15px; }
+  .cover-title { font-size: 11px; }
+  .book-title  { font-size: 11px; }
+  .book-info   { padding: 10px 10px 12px; }
+  .section     { margin-bottom: 44px; }
+}
+
+@media (max-width: 380px) {
+  :root { --card-w: 135px; --gap: 12px; }
+  .carousel-wrapper { padding: 0 36px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tag">📚 RECURSOS ELECTRÓNICOS Y FÍSICOS</div>
+  <div class="nav-switch">
+    <a href="Indexdocentes.html" class="switch-btn">👩‍🏫 Docentes</a>
+  </div>
+</header>
+
+<div id="library"></div>
+
+<script>
+const sections = [
+  {
+    title: 'OverDrive',
+    subtitle: 'Libros sobre IA, automatización y aprendizaje profundo',
+    books: [
+      { title: 'Inteligencia artificial y chatgpt', author: 'Daniel Fernández Berjemo. Javier María Iljaba Pérez', gradient: 'cover-0', image: "https://img1.od-cdn.com/ImageType-100/16602-1/%7B581B867D-7230-4788-A770-97F4C0A82C23%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/12828129' },
+      { title: 'Artificial Intelligence in Creative Industries', author: 'Francisco Tigre Moura. Caterina Moruzzi', gradient: 'cover-1', image: "https://img1.od-cdn.com/ImageType-100/8125-1/%7B4A7B3D88-678C-48B5-BC65-0A302AF63F33%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/12971039' },
+      { title: 'The Ethics of AI', author: 'Rainer Mühlhoff', gradient: 'cover-2', image: "https://img2.od-cdn.com/ImageType-100/6852-1/%7BADE28F0E-2CEC-4871-9524-4E960C4499A6%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/11994691' },
+      { title: 'Código humano: singularidad, derecho e inteligencia artificial', author: 'Miguel Ángel Adame Martínez. Fernando H. Llano Alonso', gradient: 'cover-3', image: "https://img1.od-cdn.com/ImageType-100/16602-1/%7B453BBCA8-A7C5-41D6-823C-82BA1E862E0E%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/12828090' },
+      { title: 'Comunicación digital en la era de la inteligencia artificial', author: 'Martha Patricia Álvarez-Chávez. | Gloria Olivia Rodríguez-Garay', gradient: 'cover-4', image: "https://img1.od-cdn.com/ImageType-100/16602-1/%7B1360BE0C-090B-4CF3-B7B9-939DEEFC39E3%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/12438442' },
+      { title: 'La aplicación de ChatGPT y otras herramientas de inteligencia artificial en el aula universitaria', author: 'Víctor Luis Gutiérrez Castillo', gradient: 'cover-1', image: "https://img1.od-cdn.com/ImageType-100/16602-1/%7BB81A371F-39EE-4C8D-9BF0-7AD8C3B624F3%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/11736484' },
+      { title: 'Aprender para el futuro', author: 'Carlos Hervás-Gómez. María Dolores Díaz-Noguera', gradient: 'cover-2', image: "https://img2.od-cdn.com/ImageType-100/16602-1/%7B9CE1491D-BDA2-4B84-86B8-7146F792724A%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/12128198' },
+      { title: 'Domina el marketing en 7 días', author: 'Juan Pablo Galarza', gradient: 'cover-3', image: "https://img2.od-cdn.com/ImageType-100/7635-1/%7B4B63DCB6-A5DA-4125-82E6-07F656C69DB1%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/12575746' },
+      { title: 'Artificial Humanities', author: 'Nina Beguš', gradient: 'cover-4', image: "https://img3.od-cdn.com/ImageType-100/1766-1/%7B2925CD90-1659-419F-9954-1A768E32ACE4%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/12417809' },
+      { title: 'Artificial Intelligence and Data Science in Agriculture', author: 'Chandrasekar Vuppalapati', gradient: 'cover-4', image: "https://img1.od-cdn.com/ImageType-100/6852-1/%7BF3717CC9-7691-4274-BE7E-FEAB8D55A01D%7DIMG100.JPG", url: 'https://utadeo.overdrive.com/media/13175130' }
+    ]
+  },
+  {
+    title: 'E-libro',
+    subtitle: 'La Inteligencia Artificial en las diferentes áreas de la sociedad',
+    books: [
+      { title: 'Derecho e inteligencia artificial: avanzando en la regulación de la inteligencia artificial', author: 'Herbosa Martínez, Inmaculada', gradient: 'cover-5', image: "https://biblioteca.uniandes.edu.co/sites/default/files/la-inteligencia-artificial.jpg", url: 'https://elibro.utadeoproxy.elogim.com/es/lc/utadeo/titulos/293091' },
+      { title: 'Programación de inteligencia artificial', author: 'Menéndez García, Luis Alfonso', gradient: 'cover-6', image: "https://alfaomega.com.mx/wp-content/uploads/2023/12/3-1.png", url: 'https://elibro.utadeoproxy.elogim.com/es/lc/utadeo/titulos/282037' },
+      { title: 'La transformación de la inteligencia artificial', author: 'Torres Manrique, Jorge Isaac', gradient: 'cover-7', image: "https://libreriatemis.com/wp-content/uploads/2025/08/13-602-0008.jpg", url: 'https://elibro.utadeoproxy.elogim.com/es/lc/utadeo/titulos/287625' },
+      { title: 'La inteligencia artificial y el fin del arte', author: 'Misselhorn, Catrin', gradient: 'cover-0', image: "https://m.media-amazon.com/images/I/61R4pBiE1eL._AC_UF1000,1000_QL80_.jpg", url: 'https://elibro.utadeoproxy.elogim.com/es/lc/utadeo/titulos/289212' },
+      { title: 'La gobernanza ética de la inteligencia artificial en las organizaciones', author: 'Escribano Cañas, Blanca', gradient: 'cover-6', image: "https://www.dykinson.com/media/img/portadas/9791370470388.jpg", url: 'https://elibro.utadeoproxy.elogim.com/es/lc/utadeo/titulos/296804' },
+      { title: 'La Inteligencia Artificial en las relaciones laborales: el uso de algoritmos en la selección de personal y en la extinción contractual', author: 'Pazos Pérez, Alexandre', gradient: 'cover-7', image: "https://www.marcialpons.es/media/img/portadas/2026/3/11/9788410856875.jpg", url: 'https://elibro.utadeoproxy.elogim.com/es/lc/utadeo/titulos/295746' },
+      { title: 'La sociedad algorítmica. Datos, código y plataformas en la era de la desinformación', author: 'García-Marín, David', gradient: 'cover-0', image: "https://www.dykinson.com/media/img/portadas/979-13-7006-120-3.jpg", url: 'https://elibro.utadeoproxy.elogim.com/es/lc/utadeo/titulos/293992' }
+    ]
+  },
+  {
+    title: 'Odilo',
+    subtitle: 'Aplicaciones, desafíos y filosofía de la Inteligencia Artificial',
+    books: [
+      { title: 'Inteligencia artificial Una exploración filosófica sobre el futuro de la mente y la conciencia', author: 'Susan Schneider', gradient: 'cover-1', image: "https://covers.odilo.io/public/OdiloPlace_Libranda_Dist/9788418223297_koan_libros_ORIGINAL.jpg", url: 'https://utadeo.unlimitedlearning.io/info/inteligencia-artificial-una-exploracion-filosofica-sobre-el-futuro-de-la-mente-y-la-conciencia-03516402' },
+      { title: 'Inteligencia artificial Comprender las aplicaciones comerciales, la automatización y el mercado laboral', author: 'John Adamssen', gradient: 'cover-2', image: "https://images.findawayworld.com/v1/image/cover/CD2287943?width=640&height=908", url: 'https://utadeo.unlimitedlearning.io/info/inteligencia-artificial-comprender-las-aplicaciones-comerciales-la-automatizacion-y-el-mercado-laboral-03012989' },
+      { title: 'Inteligencia artificial Guía para seres pensantes', author: 'Melanie Mitchel', gradient: 'cover-3', image: "https://covers.odilo.io/public/OdiloPlace_Bookwire_E8145/9788412779745_ORIGINAL.jpg", url: 'https://utadeo.unlimitedlearning.io/info/inteligencia-artificial-guia-para-seres-pensantes-03794045' },
+      { title: 'Inteligencia Artificial', author: 'Emilio Soria; Pablo Rodríguez. Quique García; Fran Vaquer', gradient: 'cover-4', image: "https://covers.odilo.io/public/OdiloPlace_RAMA_Editorial/9788418971877_ORIGINAL.jpg", url: 'https://utadeo.unlimitedlearning.io/info/inteligencia-artificial-03216072' },
+      { title: 'Inteligencia artificial general La serie de conocimientos esenciales de MIT Press', author: 'Julian Togelius', gradient: 'cover-2', image: "https://covers.odilo.io/public/OdiloPlace_Bookwire_E8145/9789561434738_2446_640x908.jpg", url: 'https://utadeo.unlimitedlearning.io/info/inteligencia-artificial-general-la-serie-de-conocimientos-esenciales-de-mit-press-04069398' },
+      { title: 'Periodismo e Inteligencia Artificial Aplicaciones y desafíos profesionales', author: 'Parratt Fernández, Sonia', gradient: 'cover-3', image: "https://covers.odilo.io/public/OdiloPlace_Comunicacion_Social/9788410176027_20535_ORIGINAL.jpg", url: 'https://utadeo.unlimitedlearning.io/info/periodismo-e-inteligencia-artificial-aplicaciones-y-desafios-profesionales-03863290' },
+      { title: 'Derecho e inteligencia artificial', author: 'Rivero Ortega, Ricardo', gradient: 'cover-4', image: "https://covers.odilo.io/public/OdiloPlace_Ediciones_Olejnik/9789564073880_ORIGINAL.jpg", url: 'https://utadeo.unlimitedlearning.io/info/derecho-e-inteligencia-artificial-03692613' }
+    ]
+  },
+  {
+    title: 'Recursos físicos',
+    subtitle: 'Puedes encontrar este material en el piso 4 de la Biblioteca',
+    books: [
+      { title: 'Inteligencia artificial : ChatGPT práctico para empresas.', author: 'Pérez Rodríguez, María Dolores', gradient: 'cover-5', image: "https://edicionesdelau.com/wp-content/uploads/2023/11/Inteligencia-artificial-ChatGPT.png", url: 'https://research.ebsco.com/c/utjqkg/search/details/fxkuyuvp5r?db=cat09062a' },
+      { title: 'Inteligencia artificial : casos prácticos con aprendizaje profundo', author: 'Emilio Soria Olivas [y otros cinco].', gradient: 'cover-6', image: "https://edicionesdelau.com/wp-content/uploads/2022/11/Inteligencia-Artificial_dig.jpg", url: 'https://research.ebsco.com/c/utjqkg/search/details/b47fnryrjn?db=cat09062a' },
+      { title: 'Inteligencia artificial, etcétera', author: 'Jorge Izquierdo Martínez', gradient: 'cover-7', image: "https://images.cdn2.buscalibre.com/fit-in/360x360/fb/95/fb95ca362d35534a80451191b124d153.jpg", url: 'https://research.ebsco.com/c/utjqkg/search/details/e2ciojzwwj?db=cat09062a' },
+      { title: 'Inteligencia artificial para marketing : cómo la tecnología revolucionará tu estrategia', author: 'Ahumada Luyando, Silvia', gradient: 'cover-0', image: "https://images.cdn1.buscalibre.com/fit-in/360x360/77/7c/777ce4f90485c3d8588e487f4f9e71e2.jpg", url: 'https://research.ebsco.com/c/utjqkg/search/details/mbygtsvvxj?db=cat09062a' },
+      { title: 'Programación de inteligencia artificial', author: 'Pérez López, César', gradient: 'cover-5', image: "https://www.sancristoballibros.com/imagenes/9788419/978841903410.GIF", url: 'https://research.ebsco.com/c/utjqkg/search/details/7izgpfgmmz?db=cat09062a' },
+      { title: 'Introducción a la inteligencia artificial : la tecnología que no cambiará para siempre', author: 'Girón Sierra, José María', gradient: 'cover-6', image: "https://images.cdn1.buscalibre.com/fit-in/360x360/b6/16/b616897c4f50a19d05d3ef556be8df81.jpg", url: 'https://research.ebsco.com/c/utjqkg/search/details/k2k7e4cn4b?db=cat09062a' },
+      { title: 'Derechos del consumidor en la encrucijada de la inteligencia artificial', author: 'Celeste Danesi, Cecilia', gradient: 'cover-7', image: "https://dialnet.unirioja.es/recursos/imagen?entidad=LIBRO&tipo_contenido=74&libro=987585", url: 'https://research.ebsco.com/c/utjqkg/search/details/kdt3ykpwgz?db=cat09062a' },
+      { title: 'Interacción entre la inteligencia artificial y el derecho : (sugerencias preliminares para abogados)', author: 'Herrera Vargas, Martha Cecilia', gradient: 'cover-1', image: "https://libreriatemis.com/wp-content/uploads/2024/09/13-095-0001.jpg", url: 'https://research.ebsco.com/c/utjqkg/search/details/adffme5lar?db=cat09062a' },
+      { title: 'Estudios sobre e inteligencia artificial y economía digital', author: 'César García Novoa, Francisco Hernández Rodríguez', gradient: 'cover-0', image: "https://www.marcialpons.es/media/img/portadas/2024/5/27/9788411629058.jpg", url: 'https://research.ebsco.com/c/utjqkg/search/details/sehie5tr4v?db=cat09062a' }
+    ]
+  }
+];
+
+// ── ENGINE ────────────────────────────────────────────────────────────────────
+
+function createCarousel(section) {
+  const sectionEl = document.createElement('section');
+  sectionEl.className = 'section';
+  sectionEl.innerHTML = `
+    <div class="section-title">
+      <h2>${section.title}</h2>
+      <p>${section.subtitle}</p>
+    </div>
+    <div class="carousel-wrapper">
+      <button class="nav-btn prev" aria-label="Anterior">&#8592;</button>
+      <div class="carousel-track-container">
+        <div class="carousel-track"></div>
+      </div>
+      <button class="nav-btn next" aria-label="Siguiente">&#8594;</button>
+    </div>
+    <div class="dots"></div>`;
+
+  document.getElementById('library').appendChild(sectionEl);
+
+  const wrapper    = sectionEl.querySelector('.carousel-wrapper');
+  const container  = sectionEl.querySelector('.carousel-track-container');
+  const track      = sectionEl.querySelector('.carousel-track');
+  const dotsEl     = sectionEl.querySelector('.dots');
+  const prevBtn    = sectionEl.querySelector('.prev');
+  const nextBtn    = sectionEl.querySelector('.next');
+
+  let current = 0;
+
+  // Build cards & dots
+  section.books.forEach((book, i) => {
+    const card = document.createElement('div');
+    card.className = 'book-card' + (i === 0 ? ' active' : '');
+    card.innerHTML = book.image
+      ? `<img src="${book.image}" alt="${book.title}" class="book-cover" loading="lazy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+         <div class="book-cover-placeholder ${book.gradient}" style="display:none">
+           <div class="cover-title">${book.title}</div>
+           <div class="cover-author">${book.author}</div>
+         </div>`
+      : `<div class="book-cover-placeholder ${book.gradient}">
+           <div class="cover-title">${book.title}</div>
+           <div class="cover-author">${book.author}</div>
+         </div>`;
+    card.innerHTML += `
+      <div class="book-info">
+        <div class="book-title">${book.title}</div>
+        <div class="book-author">${book.author}</div>
+        <a href="${book.url}" target="_blank" rel="noopener" class="book-btn">ACCEDE AL LIBRO AQUÍ</a>
+      </div>`;
+
+    card.addEventListener('click', () => goTo(i));
+    track.appendChild(card);
+
+    const dot = document.createElement('button');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', `Libro ${i + 1}`);
+    dot.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(dot);
+  });
+
+  // ── Helpers ──
+  function cardW() {
+    const c = track.children[0];
+    return c ? c.getBoundingClientRect().width + parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap') || 20) : 220;
+  }
+  function offset() {
+    const cw = container.getBoundingClientRect().width;
+    const w  = track.children[0] ? track.children[0].getBoundingClientRect().width : 200;
+    return (cw - w) / 2;
+  }
+
+  function goTo(index) {
+    current = ((index % section.books.length) + section.books.length) % section.books.length;
+    track.style.transform = `translateX(${offset() - current * cardW()}px)`;
+    track.querySelectorAll('.book-card').forEach((c, i) => c.classList.toggle('active', i === current));
+    dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  // ── Touch / mouse drag ──
+  let startX = 0, startScrollX = 0, isDragging = false, moved = false;
+
+  function dragStart(x) {
+    isDragging = true; moved = false; startX = x;
+    const mat = new WebKitCSSMatrix(getComputedStyle(track).transform);
+    startScrollX = mat.m41;
+    track.classList.add('no-transition');
+    container.classList.add('dragging');
+  }
+  function dragMove(x) {
+    if (!isDragging) return;
+    const dx = x - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    track.style.transform = `translateX(${startScrollX + dx}px)`;
+  }
+  function dragEnd(x) {
+    if (!isDragging) return;
+    isDragging = false;
+    track.classList.remove('no-transition');
+    container.classList.remove('dragging');
+    const dx = x - startX;
+    if (Math.abs(dx) > 40) {
+      goTo(dx < 0 ? current + 1 : current - 1);
+    } else {
+      goTo(current); // snap back
+    }
+  }
+
+  // Touch
+  container.addEventListener('touchstart', e => dragStart(e.touches[0].clientX), { passive: true });
+  container.addEventListener('touchmove',  e => dragMove(e.touches[0].clientX),  { passive: true });
+  container.addEventListener('touchend',   e => dragEnd(e.changedTouches[0].clientX));
+
+  // Mouse drag
+  container.addEventListener('mousedown',  e => { dragStart(e.clientX); e.preventDefault(); });
+  window.addEventListener('mousemove',     e => dragMove(e.clientX));
+  window.addEventListener('mouseup',       e => dragEnd(e.clientX));
+
+  // Prevent link click during drag
+  track.addEventListener('click', e => { if (moved) e.preventDefault(); }, true);
+
+  // Recalc on resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => goTo(current), 120);
+  });
+
+  // Init
+  setTimeout(() => goTo(0), 60);
+}
+
+sections.forEach(createCarousel);
+</script>
+</body>
+</html>
